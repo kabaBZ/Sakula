@@ -16,8 +16,12 @@ class Downloader:
 
 class M3u8Downloader(Downloader):
     def __init__(self, fileName) -> None:
-        self.filePath = "./" + fileName
-        self.url = "https://tup.yinghuacd.com/feifan/" + fileName
+        self.filePath = "./" + fileName.split("/")[-1]
+        self.url = (
+            fileName
+            if fileName.startswith("http")
+            else "https://tup.yinghuacd.com/feifan/" + fileName
+        )
 
     def readLinks(self):
         with open(self.filePath, "r") as f:
