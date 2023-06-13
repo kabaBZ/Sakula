@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from DownLoader import M3u8Downloader, DirectDownloader
 from queue import Queue
-from threading import Thread
+from multiprocessing import Process
 import shutil
 import os
 
@@ -25,6 +25,26 @@ class CrawlerAbs:
             self.proxyPool.extend(proxy)
         else:
             print("Ivalid Proxy Format (dict or List)!")
+
+    def download_start(
+        self, mission, targetPath=None, tempPath=G_Temp_path, Downloader=M3u8Downloader
+    ):
+        fileTempPath = tempPath + self.targetName + "Ep" + str(mission["ep"]) + ".mp4"
+        fileTargetFolder = targetPath or os.getcwd() + "\\" + self.targetName
+        if not os.path.exists(fileTargetFolder):
+            os.mkdir(fileTargetFolder)
+        downloader = Downloader(mission["m3u8"])
+        downloader.start(fileTempPath)
+        print(self.targetName + "Ep" + str(mission["ep"]) + ".mp4下载成功！")
+        shutil.move(
+            fileTempPath,
+            fileTargetFolder
+            + "\\"
+            + self.targetName
+            + "Ep"
+            + str(mission["ep"])
+            + ".mp4",
+        )
 
     def get_list_from_input(self):
         x = input("输入<back>:重新选择电影,输入数字确定下载ep(支持范围选择), 输入0下载全部ep")
@@ -55,34 +75,14 @@ class CrawlerAbs:
         pass
 
     def startDownload(self, targetPath=None, tempPath=G_Temp_path):
-        def download_start(mission, Downloader=M3u8Downloader):
-            fileTempPath = (
-                tempPath + self.targetName + "Ep" + str(mission["ep"]) + ".mp4"
-            )
-            fileTargetFolder = targetPath or os.getcwd() + "\\" + self.targetName
-            if not os.path.exists(fileTargetFolder):
-                os.mkdir(fileTargetFolder)
-            downloader = Downloader(mission["m3u8"])
-            downloader.start(fileTempPath)
-            print(self.targetName + "Ep" + str(mission["ep"]) + ".mp4下载成功！")
-            shutil.move(
-                fileTempPath,
-                fileTargetFolder
-                + "\\"
-                + self.targetName
-                + "Ep"
-                + str(mission["ep"])
-                + ".mp4",
-            )
+        download_pool = []
+        # while not movie_queue.empty():
+        p = Process(target=self.download_start, args=(movie_queue.get(),))
+        download_pool.append(p)
+        p.start()
 
-        download_thread = []
-        while not movie_queue.empty():
-            t = Thread(target=download_start, args=(movie_queue.get(),))
-            download_thread.append(t)
-            t.start()
-
-        for t in download_thread:
-            t.join()
+        # for p in download_pool:
+        p.join()
 
     def start(self):
         # self.Search(input("请输入名称"))

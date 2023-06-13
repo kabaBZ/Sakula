@@ -3,6 +3,7 @@ import requests
 from abc import abstractmethod
 from tqdm import tqdm
 from Myrequests import SakulaReq
+from threading import Thread
 
 
 class Downloader:
@@ -24,6 +25,7 @@ class M3u8Downloader(Downloader):
             if fileName.startswith("http")
             else "https://tup.yinghuacd.com/feifan/" + fileName
         )
+        self.data = {}
 
     def readLinks(self):
         with open(self.filePath, "r") as f:
@@ -38,26 +40,57 @@ class M3u8Downloader(Downloader):
                 f.write(res.content)
         return self.readLinks()
 
-    def start(self, filePath):
+    def download_as_data(self, links, index):
         SakulaRequest = SakulaReq()
-        links = self.getData()
-
+        data = None
         for link in tqdm(links):
             ts = SakulaRequest.Request(
                 method="GET", url=link, data=None, headers=None, verify=False
             )
             if ts["suc"]:
-                with open("{}".format(filePath), "ab") as f:
-                    f.write(ts["data"].content)
+                data += ts["data"].content
             else:
                 ts = SakulaRequest.Request(
                     method="GET", url=link, data=None, headers=None, verify=False
                 )
                 if ts["suc"]:
-                    with open("{}".format(filePath), "ab") as f:
-                        f.write(ts["data"].content)
+                    data += ts["data"].content
                 else:
+                    with open("error.html", "w") as f:
+                        f.write(ts["data"])
                     print(ts)
+        return self.data.update({index: data})
+
+    def start(self, filePath):
+        links = self.getData()[1:4]
+
+        def divideIntoNstrand(listTemp, n):
+            twoList = [[] for i in range(n)]
+            for i, e in enumerate(listTemp):
+                twoList[i % n].append(e)
+            return twoList
+
+        devide_list = divideIntoNstrand(links, 4)
+        self.download_as_data(links, 0)
+        thread_pool = []
+        # for list1 in devide_list:
+        t = Thread(
+            target=self.download_as_data,
+            args=(devide_list[0] + devide_list[1] + devide_list[2] + devide_list[3], 0),
+        )
+        thread_pool.append(t)
+        t.start()
+
+        # for t in thread_pool:
+        t.join()
+        if os.path.exists(filePath):
+            os.remove(filePath)
+        with open(filePath, "ab") as f:
+            f.write(self.data[0])
+            f.write(self.data[1])
+            f.write(self.data[2])
+            f.write(self.data[3])
+        print("over:{}".format(filePath))
 
 
 class DirectDownloader(Downloader):
