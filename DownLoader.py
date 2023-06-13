@@ -40,10 +40,10 @@ class M3u8Downloader(Downloader):
                 f.write(res.content)
         return self.readLinks()
 
-    def download_as_data(self, links, index):
+    def download_as_data(self, links, index, desc):
         SakulaRequest = SakulaReq()
         data = b""
-        for link in tqdm(links):
+        for link in tqdm(links, desc):
             ts = SakulaRequest.Request(
                 method="GET", url=link, data=None, headers=None, verify=False
             )
@@ -75,6 +75,11 @@ class M3u8Downloader(Downloader):
             t = Thread(
                 target=self.download_as_data,
                 args=(list1, devide_list.index(list1)),
+                kwargs={
+                    "desc": filePath.split("\\")[-1]
+                    + " part"
+                    + str(devide_list.index(list1))
+                },
             )
             thread_pool.append(t)
             t.start()
