@@ -42,7 +42,7 @@ class M3u8Downloader(Downloader):
 
     def download_as_data(self, links, index):
         SakulaRequest = SakulaReq()
-        data = None
+        data = b""
         for link in tqdm(links):
             ts = SakulaRequest.Request(
                 method="GET", url=link, data=None, headers=None, verify=False
@@ -62,27 +62,25 @@ class M3u8Downloader(Downloader):
         return self.data.update({index: data})
 
     def start(self, filePath):
-        links = self.getData()[1:4]
+        links = self.getData()
 
         def divideIntoNstrand(listTemp, n):
-            twoList = [[] for i in range(n)]
-            for i, e in enumerate(listTemp):
-                twoList[i % n].append(e)
-            return twoList
+            step = int(len(listTemp) / n)
+            return [listTemp[i : i + step] for i in range(0, len(listTemp), step)]
 
         devide_list = divideIntoNstrand(links, 4)
-        self.download_as_data(links, 0)
+        # self.download_as_data(links, 0)
         thread_pool = []
-        # for list1 in devide_list:
-        t = Thread(
-            target=self.download_as_data,
-            args=(devide_list[0] + devide_list[1] + devide_list[2] + devide_list[3], 0),
-        )
-        thread_pool.append(t)
-        t.start()
+        for list1 in devide_list:
+            t = Thread(
+                target=self.download_as_data,
+                args=(list1, devide_list.index(list1)),
+            )
+            thread_pool.append(t)
+            t.start()
 
-        # for t in thread_pool:
-        t.join()
+        for t in thread_pool:
+            t.join()
         if os.path.exists(filePath):
             os.remove(filePath)
         with open(filePath, "ab") as f:

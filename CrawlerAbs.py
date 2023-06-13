@@ -76,13 +76,13 @@ class CrawlerAbs:
 
     def startDownload(self, targetPath=None, tempPath=G_Temp_path):
         download_pool = []
-        # while not movie_queue.empty():
-        p = Process(target=self.download_start, args=(movie_queue.get(),))
-        download_pool.append(p)
-        p.start()
+        while not movie_queue.empty():
+            p = Process(target=self.download_start, args=(movie_queue.get(),))
+            download_pool.append(p)
+            p.start()
 
-        # for p in download_pool:
-        p.join()
+        for p in download_pool:
+            p.join()
 
     def start(self):
         # self.Search(input("请输入名称"))
