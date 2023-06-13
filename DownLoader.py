@@ -48,7 +48,14 @@ class M3u8Downloader(Downloader):
                 with open("{}.ts".format(name), "ab") as f:
                     f.write(ts["data"].content)
             else:
-                print(ts)
+                ts = SakulaRequest.Request(
+                    method="GET", url=link, data=None, headers=None, verify=False
+                )
+                if ts["suc"]:
+                    with open("{}.ts".format(name), "ab") as f:
+                        f.write(ts["data"].content)
+                else:
+                    print(ts.text)
 
 
 class DirectDownloader(Downloader):
