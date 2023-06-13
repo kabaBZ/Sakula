@@ -16,7 +16,9 @@ class Downloader:
 
 class M3u8Downloader(Downloader):
     def __init__(self, fileName) -> None:
-        self.filePath = "./" + fileName.split("/")[-1]
+        if not os.path.exists("./m3u8"):
+            os.mkdir("./m3u8")
+        self.filePath = "./m3u8/" + fileName.split("/")[-1]
         self.url = (
             fileName
             if fileName.startswith("http")
@@ -36,7 +38,7 @@ class M3u8Downloader(Downloader):
                 f.write(res.content)
         return self.readLinks()
 
-    def start(self, name="name"):
+    def start(self, filePath):
         SakulaRequest = SakulaReq()
         links = self.getData()
 
@@ -45,14 +47,14 @@ class M3u8Downloader(Downloader):
                 method="GET", url=link, data=None, headers=None, verify=False
             )
             if ts["suc"]:
-                with open("{}.ts".format(name), "ab") as f:
+                with open("{}".format(filePath), "ab") as f:
                     f.write(ts["data"].content)
             else:
                 ts = SakulaRequest.Request(
                     method="GET", url=link, data=None, headers=None, verify=False
                 )
                 if ts["suc"]:
-                    with open("{}.ts".format(name), "ab") as f:
+                    with open("{}".format(filePath), "ab") as f:
                         f.write(ts["data"].content)
                 else:
                     print(ts.text)
