@@ -3,3 +3,10 @@ __pycache__
 *.m3u8
 Temp/
 m3u8/
+*
+
+!CrawlerAbs.py
+!CrawlerStruct.py
+!DownLoader.py
+!Myrequests.py
+!main.py

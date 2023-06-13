@@ -57,7 +57,7 @@ class M3u8Downloader(Downloader):
                     with open("{}".format(filePath), "ab") as f:
                         f.write(ts["data"].content)
                 else:
-                    print(ts.text)
+                    print(ts)
 
 
 class DirectDownloader(Downloader):

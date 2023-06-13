@@ -40,22 +40,22 @@ class SakulaCrawler(CrawlerAbs):
         for result in self.searchResult:
             print("{}.{}".format(result["index"], result["name"]))
 
-        # while True:
-        #     try:
-        #         index = int(input()) - 1
-        #         if index > len(self.searchResult):
-        #             print("请输入存在的序号")
-        #             continue
-        #         break
-        #     except ValueError:
-        #         print("请输入数字序号")
-        index = 2
+        while True:
+            try:
+                index = int(input()) - 1
+                if index > len(self.searchResult):
+                    print("请输入存在的序号")
+                    continue
+                break
+            except ValueError:
+                print("请输入数字序号")
+        # index = 2
 
         self.targetHref = self.searchResult[index]["href"]
         self.targetName = self.searchResult[index]["name"]
 
     def Select_Ep(self):
-        # todo 增加选择
+        print("选择的电影为：{}".format(self.targetName))
         detail_page = requests.get("http://www.yinghuacd.com/" + self.targetHref)
         detail_page.encoding = "utf-8"
 
@@ -65,6 +65,11 @@ class SakulaCrawler(CrawlerAbs):
         Ep_dic = {}
         for index, ep in enumerate(Ep_hrefs):
             Ep_dic.update({index + 1: "http://www.yinghuacd.com" + ep})
+
+        for item in Ep_dic:
+            print("EP" + str(item))
+
+        targetEp = self.get_list_from_input()
 
         def get_m3u8_url(index):
             ep_page = requests.get(Ep_dic[index])
@@ -82,9 +87,12 @@ class SakulaCrawler(CrawlerAbs):
 
             movie_queue.put({"ep": index, "m3u8": m3u8_url}, timeout=5)
 
-        # todo 增加选择ep
         threads = []
-        for i in range(len(Ep_dic)):
+        if -1 in targetEp:
+            indexs = range(len(Ep_dic))
+        else:
+            indexs = targetEp
+        for i in indexs:
             t = Thread(target=get_m3u8_url, args=(i + 1,))
             threads.append(t)
             t.start()

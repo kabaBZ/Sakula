@@ -26,6 +26,22 @@ class CrawlerAbs:
         else:
             print("Ivalid Proxy Format (dict or List)!")
 
+    def get_list_from_input(self):
+        x = input("输入<back>:重新选择电影,输入数字确定下载ep(支持范围选择), 输入0下载全部ep")
+        while x == "back":
+            self.Select_Movie()
+            x = input("list:")
+        x = x.strip(",").strip("，").replace("，", ",")
+        x = x.split(",")
+        s = set()
+        for char in x:
+            if "-" in char:
+                for i in range(int(char.split("-")[0]) - 1, int(char.split("-")[1])):
+                    s.add(i)
+            else:
+                s.add(int(char) - 1)
+        return s
+
     @abstractmethod
     def Search(self, keyWord):
         pass
@@ -43,19 +59,30 @@ class CrawlerAbs:
             fileTempPath = (
                 tempPath + self.targetName + "Ep" + str(mission["ep"]) + ".mp4"
             )
-            fileTargetFolder = targetPath or os.getcwd() + self.targetName
+            fileTargetFolder = targetPath or os.getcwd() + "\\" + self.targetName
+            if not os.path.exists(fileTargetFolder):
+                os.mkdir(fileTargetFolder)
             downloader = Downloader(mission["m3u8"])
             downloader.start(fileTempPath)
-            shutil.move(fileTempPath, fileTargetFolder)
+            print(self.targetName + "Ep" + str(mission["ep"]) + ".mp4下载成功！")
+            shutil.move(
+                fileTempPath,
+                fileTargetFolder
+                + "\\"
+                + self.targetName
+                + "Ep"
+                + str(mission["ep"])
+                + ".mp4",
+            )
 
         download_thread = []
-        while movie_queue.not_empty:
+        while not movie_queue.empty():
             t = Thread(target=download_start, args=(movie_queue.get(),))
             download_thread.append(t)
             t.start()
 
-        for thread in download_thread:
-            thread.join()
+        for t in download_thread:
+            t.join()
 
     def start(self):
         # self.Search(input("请输入名称"))
