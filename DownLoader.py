@@ -64,9 +64,21 @@ class M3u8Downloader(Downloader):
     def start(self, filePath):
         links = self.getData()
 
-        def divideIntoNstrand(listTemp, n):
-            step = int(len(listTemp) / n)
-            return [listTemp[i : i + step] for i in range(0, len(listTemp), step)]
+        def divideIntoNstrand(lst, n):
+            length = len(lst)
+            sublist_length = length // n
+            remainder = length % n
+
+            sublists = []
+            start = 0
+
+            for i in range(n):
+                sublist_size = sublist_length + (1 if i < remainder else 0)
+                end = start + sublist_size
+                sublists.append(lst[start:end])
+                start = end
+
+            return sublists
 
         devide_list = divideIntoNstrand(links, 4)
         # self.download_as_data(links, 0)
