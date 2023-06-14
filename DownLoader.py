@@ -4,6 +4,7 @@ from abc import abstractmethod
 from tqdm import tqdm
 from Myrequests import SakulaReq
 from threading import Thread
+import threading
 
 
 class Downloader:
@@ -121,3 +122,57 @@ class DirectDownloader(Downloader):
                 f.write(ts["data"].content)
         else:
             print(ts)
+
+
+def download_chunk(url, start, end, filename):
+    headers = {"Range": f"bytes={start}-{end}"}
+    response = requests.get(url, headers=headers, stream=True)
+
+    with open(filename, "r+b") as file:
+        file.seek(start)
+        file.write(response.content)
+
+
+def download_file(url, num_threads):
+    response = requests.head(url)
+    file_size = int(response.headers["Content-Length"])
+
+    chunk_size = file_size // num_threads
+    last_chunk_size = chunk_size + (file_size % num_threads)
+
+    threads = []
+    with open("downloaded_file", "wb") as file:
+        file.write(b"\0" * file_size)
+
+        for i in range(num_threads):
+            if i == num_threads - 1:
+                # 最后一个线程下载剩余的数据
+                start = (num_threads - 1) * chunk_size
+                end = start + last_chunk_size - 1
+                thread = threading.Thread(
+                    target=download_chunk, args=(url, start, end, "downloaded_file")
+                )
+                thread.start()
+                threads.append(thread)
+            else:
+                start = i * chunk_size
+                end = start + chunk_size - 1
+
+                thread = threading.Thread(
+                    target=download_chunk, args=(url, start, end, "downloaded_file")
+                )
+                thread.start()
+                threads.append(thread)
+
+        # 等待所有线程完成
+        for thread in threads:
+            thread.join()
+
+    print("文件下载完成")
+
+
+if __name__ == "__main__":
+    url = "https://example.com/file.jpg"
+    num_threads = 4
+
+    download_file(url, num_threads)
