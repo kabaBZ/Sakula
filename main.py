@@ -27,7 +27,7 @@ class SakulaCrawler(CrawlerAbs):
     def Search(self, keyWord):
         json = {"m": "search", "c": "index", "a": "init", "q": keyWord}
         res = requests.post(
-            "http://www.yinghuacd.com/search/{}".format(keyWord), json=json
+            "http://www.yinghuavideo.com/search/{}".format(keyWord), json=json
         )
         result = etree.HTML(res.text)
 

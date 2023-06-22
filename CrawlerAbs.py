@@ -85,8 +85,8 @@ class CrawlerAbs:
             p.join()
 
     def start(self):
-        # self.Search(input("请输入名称"))
-        self.Search("电")
+        self.Search(input("请输入名称"))
+        # self.Search("电")
         self.Select_Movie()
         self.Select_Ep()
         self.startDownload()
